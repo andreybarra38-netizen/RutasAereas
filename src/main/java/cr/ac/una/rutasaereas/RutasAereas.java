@@ -1,41 +1,62 @@
 package cr.ac.una.rutasaereas;
 
+import cr.ac.una.rutasaereas.datos.CargadorDatos;
+import cr.ac.una.rutasaereas.datos.ErrorCargaException;
 import cr.ac.una.rutasaereas.modelo.Aeropuerto;
 import cr.ac.una.rutasaereas.modelo.Grafo;
 import cr.ac.una.rutasaereas.modelo.Ruta;
+import java.io.File;
+import java.util.List;
+import java.util.Scanner;
 
 public class RutasAereas {
 
     public static void main(String[] args) {
-
-        Grafo g = new Grafo();
-        g.agregarAeropuerto(new Aeropuerto("SJO", 464, 447, "San_Jose", "Costa_Rica"));
-        g.agregarAeropuerto(new Aeropuerto("MIA", 508, 278, "Miami", "EE.UU."));
-        g.agregarAeropuerto(new Aeropuerto("PTY", 518, 456, "Ciudad_de_Panama", "Panama"));
-
-        g.agregarRuta(new Ruta("SJO", "MIA", 165, 190));
-        g.agregarRuta(new Ruta("SJO", "PTY", 75, 110));
-        g.agregarRuta(new Ruta("MIA", "SJO", 170, 185));
-
-        System.out.println("Aeropuertos: " + g.getCantidadAeropuertos()
-                + "  Rutas: " + g.getCantidadRutas());
-
-        System.out.println("\nRutas que salen de SJO:");
-        for (Ruta r : g.getRutasSalientes("SJO")) {
-            System.out.println("  " + r);
-        }
-
-        System.out.println("\nRutas que salen de PTY (ninguna):");
-        System.out.println("  " + g.getRutasSalientes("PTY"));
-
-        System.out.println("\nBuscar 'sjo' en minusculas: " + g.getAeropuerto("sjo"));
-        System.out.println("Buscar 'XXX' (no existe):   " + g.getAeropuerto("XXX"));
-
-        // Una ruta hacia un aeropuerto que no existe debe dar un error claro
+        Grafo grafo;
         try {
-            g.agregarRuta(new Ruta("SJO", "XXX", 100, 100));
-        } catch (IllegalArgumentException e) {
-            System.out.println("\nError esperado: " + e.getMessage());
+            grafo = CargadorDatos.cargar(new File("datos/aeropuertos.txt"),
+                                         new File("datos/rutas.txt"));
+        } catch (ErrorCargaException e) {
+            // Si los datos estan mal, se informa y se termina sin "caerse"
+            System.out.println("ERROR al cargar los datos: " + e.getMessage());
+            return;
+        }
+        System.out.println("Datos cargados: " + grafo.getCantidadAeropuertos()
+                + " aeropuertos y " + grafo.getCantidadRutas() + " rutas.");
+
+        Scanner teclado = new Scanner(System.in);
+        while (true) {
+            System.out.print("\nCodigo de aeropuerto (o 'salir'): ");
+            if (!teclado.hasNextLine()) {
+                break;
+            }
+            String codigo = teclado.nextLine().trim();
+            if (codigo.equalsIgnoreCase("salir")) {
+                break;
+            }
+            consultarAeropuerto(grafo, codigo);
+        }
+    }
+
+    private static void consultarAeropuerto(Grafo grafo, String codigo) {
+        Aeropuerto a = grafo.getAeropuerto(codigo);
+        if (a == null) {
+            System.out.println("No existe ningun aeropuerto con el codigo '" + codigo + "'.");
+            return;
+        }
+        System.out.println(a.getCodigo() + " - " + a.getCiudadLegible() + ", " + a.getPaisLegible());
+        System.out.println("Posicion en el mapa: (" + a.getX() + ", " + a.getY() + ")");
+
+        List<Ruta> rutas = grafo.getRutasSalientes(codigo);
+        if (rutas.isEmpty()) {
+            System.out.println("No salen vuelos de este aeropuerto.");
+            return;
+        }
+        System.out.println("Rutas que salen (" + rutas.size() + "):");
+        for (Ruta r : rutas) {
+            Aeropuerto destino = grafo.getAeropuerto(r.getDestino());
+            System.out.printf("  -> %-4s %-22s %4d min   $%d%n",
+                    r.getDestino(), destino.getCiudadLegible(), r.getMinutos(), r.getCosto());
         }
     }
 }
