@@ -1,16 +1,17 @@
 package cr.ac.una.rutasaereas;
 
-import java.io.File;
+import cr.ac.una.rutasaereas.modelo.Aeropuerto;
+import cr.ac.una.rutasaereas.modelo.Ruta;
 
 public class RutasAereas {
 
     public static void main(String[] args) {
-    
-        File aeropuertos = new File("datos/aeropuertos.txt");
-        File rutas = new File("datos/rutas.txt");
+        
+        Aeropuerto sjo = new Aeropuerto("SJO", 464, 447, "San_Jose", "Costa_Rica");
+        Ruta r = new Ruta("SJO", "MIA", 165, 190);
 
-        System.out.println("Carpeta de trabajo: " + new File(".").getAbsolutePath());
-        System.out.println("aeropuertos.txt existe? " + aeropuertos.exists());
-        System.out.println("rutas.txt existe?       " + rutas.exists());
+        System.out.println(sjo);
+        System.out.println(r);
+        System.out.println("Ciudad legible: " + sjo.getCiudadLegible());
     }
 }
