@@ -7,6 +7,7 @@ import cr.ac.una.rutasaereas.datos.ErrorCargaException;
 import cr.ac.una.rutasaereas.modelo.Aeropuerto;
 import cr.ac.una.rutasaereas.modelo.Grafo;
 import cr.ac.una.rutasaereas.modelo.Ruta;
+import cr.ac.una.rutasaereas.algoritmos.Criterio;
 import java.io.File;
 import java.util.List;
 import java.util.Scanner;
@@ -52,11 +53,14 @@ public class RutasAereas {
                     break;
                 }
                 case "3":
-                case "4":
-                    System.out.println("Pendiente: se agrega en el Paso 6 (Dijkstra).");
+                case "4": {
+                    String[] od = pedirOrigenDestino(grafo);
+                    if (od != null) {
+                        Criterio c = opcion.equals("3") ? Criterio.TIEMPO : Criterio.COSTO;
+                        mostrarResultado(c.toString(), BuscadorRutas.dijkstra(grafo, od[0], od[1], c));
+                    }
                     break;
-                default:
-                    System.out.println("Opcion no valida.");
+                }
             }
         }
     }
