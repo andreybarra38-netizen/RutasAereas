@@ -11,6 +11,7 @@ import cr.ac.una.rutasaereas.modelo.Ruta;
 import cr.ac.una.rutasaereas.algoritmos.Criterio;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -31,13 +32,17 @@ public class RutasAereas {
                 + " aeropuertos y " + grafo.getCantidadRutas() + " rutas.");
 
         while (true) {
-            System.out.println("\n===== MENU =====");
+            System.out.println("\n===== MENU =====  (rutas activas: " + grafo.getCantidadRutas()
+                    + ", canceladas: " + grafo.getRutasCanceladas().size() + ")");
             System.out.println("1. Consultar aeropuerto");
             System.out.println("2. Ruta con menos escalas (BFS)");
             System.out.println("3. Ruta mas rapida (Dijkstra por minutos)");
             System.out.println("4. Ruta mas barata (Dijkstra por costo)");
             System.out.println("5. Destinos alcanzables desde un origen (DFS)");
-            System.out.println("6. Aeropuertos que NO pueden llegar a un destino");
+            System.out.println("6. Aeropuertos que no pueden llegar a un destino");
+            System.out.println("7. Rutas criticas desde un origen");
+            System.out.println("8. Cancelar una ruta");
+            System.out.println("9. Restaurar todas las rutas canceladas");
             System.out.println("0. Salir");
             String opcion = leer("Opcion: ");
             if (opcion == null || opcion.equals("0")) {
@@ -80,6 +85,37 @@ public class RutasAereas {
                                 ? "Desde todos los aeropuertos se puede llegar a " + d + "."
                                 : "No pueden llegar a " + d + " (" + no.size() + "): " + no);
                     }
+                    break;
+                }
+                case "7": {
+                    String o = pedirAeropuerto(grafo, "Origen: ");
+                    if (o != null) {
+                        Map<Ruta, Set<String>> criticas = Alcanzabilidad.rutasCriticas(grafo, o);
+                        if (criticas.isEmpty()) {
+                            System.out.println("Ninguna ruta, cancelada sola, deja aeropuertos inalcanzables desde " + o + ".");
+                        }
+                        for (Map.Entry<Ruta, Set<String>> e : criticas.entrySet()) {
+                            System.out.println("  Cancelar " + e.getKey().getOrigen() + " -> "
+                                    + e.getKey().getDestino() + " deja sin llegar a: " + e.getValue());
+                        }
+                    }
+                    break;
+                }
+                case "8": {
+                    String o = leer("Origen de la ruta: ");
+                    String d = leer("Destino de la ruta: ");
+                    if (o != null && d != null) {
+                        if (grafo.cancelarRuta(o, d)) {
+                            System.out.println("Ruta " + o.toUpperCase() + " -> " + d.toUpperCase() + " cancelada.");
+                        } else {
+                            System.out.println("No existe una ruta activa de '" + o + "' a '" + d + "'.");
+                        }
+                    }
+                    break;
+                }
+                case "9": {
+                    int n = grafo.restaurarRutas();
+                    System.out.println("Se restauraron " + n + " ruta(s).");
                     break;
                 }
                 default:
