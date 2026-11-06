@@ -1,5 +1,6 @@
 package cr.ac.una.rutasaereas;
 
+import cr.ac.una.rutasaereas.algoritmos.Alcanzabilidad;
 import cr.ac.una.rutasaereas.algoritmos.BuscadorRutas;
 import cr.ac.una.rutasaereas.algoritmos.ResultadoRuta;
 import cr.ac.una.rutasaereas.datos.CargadorDatos;
@@ -11,6 +12,7 @@ import cr.ac.una.rutasaereas.algoritmos.Criterio;
 import java.io.File;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class RutasAereas {
     
@@ -34,6 +36,8 @@ public class RutasAereas {
             System.out.println("2. Ruta con menos escalas (BFS)");
             System.out.println("3. Ruta mas rapida (Dijkstra por minutos)");
             System.out.println("4. Ruta mas barata (Dijkstra por costo)");
+            System.out.println("5. Destinos alcanzables desde un origen (DFS)");
+            System.out.println("6. Aeropuertos que NO pueden llegar a un destino");
             System.out.println("0. Salir");
             String opcion = leer("Opcion: ");
             if (opcion == null || opcion.equals("0")) {
@@ -61,6 +65,25 @@ public class RutasAereas {
                     }
                     break;
                 }
+                case "5": {
+                    String o = pedirAeropuerto(grafo, "Origen: ");
+                    if (o != null) {
+                        mostrarAlcanzables(grafo, o);
+                    }
+                    break;
+                }
+                case "6": {
+                    String d = pedirAeropuerto(grafo, "Destino: ");
+                    if (d != null) {
+                        List<String> no = Alcanzabilidad.noPuedenLlegarA(grafo, d);
+                        System.out.println(no.isEmpty()
+                                ? "Desde todos los aeropuertos se puede llegar a " + d + "."
+                                : "No pueden llegar a " + d + " (" + no.size() + "): " + no);
+                    }
+                    break;
+                }
+                default:
+                    System.out.println("Opcion no valida.");
             }
         }
     }
@@ -72,6 +95,45 @@ public class RutasAereas {
             return null;
         }
         return teclado.nextLine().trim();
+    }
+
+    //Pide un codigo y verifica que exista; devuelve el codigo en mayusculas o null
+    
+    private static String pedirAeropuerto(Grafo grafo, String mensaje) {
+        String c = leer(mensaje);
+        if (c == null) {
+            return null;
+        }
+        Aeropuerto a = grafo.getAeropuerto(c);
+        if (a == null) {
+            System.out.println("No existe ningun aeropuerto con el codigo '" + c + "'.");
+            return null;
+        }
+        return a.getCodigo();
+    }
+
+    //Lista los aeropuertos alcanzables desde el origen y los que no
+    
+    private static void mostrarAlcanzables(Grafo grafo, String origen) {
+        Set<String> alcanzables = Alcanzabilidad.alcanzables(grafo, origen);
+        StringBuilder si = new StringBuilder();
+        StringBuilder no = new StringBuilder();
+        int cuantosSi = 0;
+        int cuantosNo = 0;
+        for (Aeropuerto a : grafo.getAeropuertos()) {
+            if (a.getCodigo().equals(origen)) {
+                continue;
+            }
+            if (alcanzables.contains(a.getCodigo())) {
+                si.append(a.getCodigo()).append(' ');
+                cuantosSi++;
+            } else {
+                no.append(a.getCodigo()).append(' ');
+                cuantosNo++;
+            }
+        }
+        System.out.println("Alcanzables desde " + origen + " (" + cuantosSi + "): " + si);
+        System.out.println("NO alcanzables (" + cuantosNo + "): " + (cuantosNo == 0 ? "ninguno" : no));
     }
 
     //Pide origen, destino y los valida que existan y que sean
